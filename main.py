@@ -10,6 +10,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from app.Calculations import Calculations
 from app.Calculation import Calculation
+from logger_config import configure_logging
 
 # Load environment variables
 def load_environment_variables():
@@ -17,48 +18,6 @@ def load_environment_variables():
     settings = {key: value for key, value in os.environ.items()}
     logging.info("Environment variables loaded.")
     return settings
-
-# Configure logging with dynamic settings
-def configure_logging(log_level=None):
-    os.makedirs("logs", exist_ok=True)  # Ensure the logs directory exists
-
-    # Load environment variables for logging configuration if not explicitly passed
-    log_level = log_level or os.getenv("LOG_LEVEL", "INFO").upper()  # Default to INFO if not set
-    log_file = os.getenv("LOG_FILE", "logs/application.log")  # Default log file location
-    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-    # Configure logging settings
-    logging_config = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "standard": {
-                "format": log_format
-            }
-        },
-        "handlers": {
-            "console": {
-                "level": log_level,
-                "class": "logging.StreamHandler",
-                "formatter": "standard",
-                "stream": "ext://sys.stdout"
-            },
-            "file": {
-                "level": log_level,
-                "class": "logging.FileHandler",
-                "formatter": "standard",
-                "filename": log_file,
-                "mode": "a"
-            }
-        },
-        "root": {
-            "level": log_level,
-            "handlers": ["console", "file"]
-        }
-    }
-
-    # Apply logging configuration
-    logging.config.dictConfig(logging_config)
 
 
 # Load plugins dynamically
@@ -109,9 +68,26 @@ def perform_calculation_and_display(num1, num2, operation_type, commands, use_mu
         if use_multiprocessing:
             logging.debug("Using multiprocessing for calculation.")
             # Multiprocessing code here
+            result_queue = multiprocessing.Queue()
+            process = multiprocessing.Process(
+                target=operation_function.execute_multiprocessing,
+                args=(decimal_num1, decimal_num2, result_queue)
+            )
+            process.start()
+            process.join()
+            
+            # Retrieve the result from the queue
+            if not result_queue.empty():
+                result = result_queue.get()
+                logging.info(f"Calculated {operation_type} result using multiprocessing: {result}")
+                print(f"The result of {num1} {operation_type} {num2} using multiprocessing is {result}")
+            else:
+                logging.error("Failed to retrieve the result from the multiprocessing queue.")
+                print("Error: Multiprocessing calculation failed.")
         else:
             result = operation_function.execute(decimal_num1, decimal_num2)
             logging.info(f"Calculated {operation_type} result: {result}")
+            print(f"The result of {num1} {operation_type} {num2} is {result}")
 
         # Save result in history
         calculation = Calculation(decimal_num1, decimal_num2, operation_function)
