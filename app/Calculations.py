@@ -56,3 +56,17 @@ class Calculations:
         Load calculation history from a CSV file.
         """
         cls.history = pd.read_csv(filepath)
+
+    @classmethod
+    def delete_history(cls, index: int):
+        """
+        Delete a specific calculation from the history by its index.
+
+        Args:
+            index (int): The index of the calculation to delete.
+        """
+        if 0 <= index < len(cls.history):
+            cls.history = cls.history.drop(index).reset_index(drop=True)
+            print(f"Deleted calculation at index {index}.")
+        else:
+            print(f"Index {index} is out of range. Unable to delete.")

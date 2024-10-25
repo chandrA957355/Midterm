@@ -173,6 +173,14 @@ def run_repl(commands):
             else:
                 print("No calculations in history.")
             continue
+        elif user_input.startswith('delete_history'):
+            try:
+                _, index_str = user_input.split(maxsplit=1)
+                index = int(index_str)
+                Calculations.delete_history(index)
+            except (ValueError, IndexError):
+                print("Usage: delete_history <index>")
+            continue
         elif user_input.startswith('filter_with_operation'):
             try:
                 _, operation_name = user_input.split(maxsplit=1)
