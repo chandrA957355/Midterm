@@ -1,6 +1,7 @@
 from decimal import Decimal, DivisionByZero
+from app.Command import Command
 
-class DivideCommand:
+class DivideCommand(Command):
     operation_name = "divide"
 
     def execute(self, num1: Decimal, num2: Decimal) -> Decimal:

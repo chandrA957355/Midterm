@@ -1,6 +1,7 @@
 from decimal import Decimal
+from app.Command import Command
 
-class SquareCommand:
+class SquareCommand(Command):
     operation_name = "square"
 
     def execute(self, num1: Decimal, num2: Decimal) -> Decimal:

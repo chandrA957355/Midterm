@@ -1,6 +1,7 @@
 from decimal import Decimal
+from app.Command import Command
 
-class MultiplyCommand:
+class MultiplyCommand(Command):
     operation_name = "multiply"
 
     def execute(self, num1: Decimal, num2: Decimal) -> Decimal:

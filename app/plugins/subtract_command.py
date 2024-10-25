@@ -1,6 +1,7 @@
 from decimal import Decimal
+from app.Command import Command
 
-class SubtractCommand:
+class SubtractCommand(Command):
     operation_name = "subtract"
 
     def execute(self, num1: Decimal, num2: Decimal) -> Decimal:

@@ -1,6 +1,8 @@
 from decimal import Decimal
 
-class AddCommand:
+from app.Command import Command
+
+class AddCommand(Command):
     operation_name = "add"
 
     def execute(self, num1: Decimal, num2: Decimal) -> Decimal:
