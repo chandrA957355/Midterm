@@ -1,6 +1,8 @@
 from decimal import Decimal, DivisionByZero
 
 class DivideCommand:
+    operation_name = "divide"
+
     def execute(self, num1: Decimal, num2: Decimal) -> Decimal:
         if num2 == 0:
             raise DivisionByZero("Division by zero is not allowed.")
