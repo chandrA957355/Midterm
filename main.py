@@ -36,7 +36,7 @@ def configure_logging():
 # Load plugins dynamically
 def load_plugins():
     commands = OrderedDict()
-    plugins_dir = os.path.join('calculator', 'plugins')
+    plugins_dir = os.path.join('app', 'plugins')
     
     if not os.path.exists(plugins_dir):
         logging.warning(f"Plugins directory not found: {plugins_dir}")
@@ -46,7 +46,7 @@ def load_plugins():
         if filename.endswith('_command.py'):
             try:
                 module_name = filename[:-3]  
-                module = importlib.import_module(f'calculator.plugins.{module_name}')
+                module = importlib.import_module(f'app.plugins.{module_name}')
                 command_class = getattr(module, module_name[:-8].capitalize() + 'Command')
                 commands[module_name[:-8]] = command_class()
                 logging.info(f"Loaded plugin: {module_name}")
@@ -54,6 +54,7 @@ def load_plugins():
                 logging.error(f"Failed to load plugin {module_name}: {e}")
 
     return commands
+
 
 # Decorator for logging execution
 def log_execution(func):
