@@ -4,7 +4,7 @@ from decimal import Decimal
 
 class Calculations:
     """
-    A class to manage a history of calculations using Pandas.
+    A facade class to manage a history of calculations using Pandas.
     """
 
     history = pd.DataFrame(columns=["operation", "num1", "num2", "result"])
