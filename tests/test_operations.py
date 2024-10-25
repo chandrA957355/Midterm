@@ -1,6 +1,6 @@
 # tests/test_arithmetic_operations.py
 import pytest
-from app.Operations import add, subtract, multiply, divide
+from app.operations import add, subtract, multiply, divide
 
 def test_add():
     # Test basic addition

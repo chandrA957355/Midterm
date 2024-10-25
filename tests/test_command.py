@@ -1,7 +1,7 @@
 # tests/test_command.py
 import pytest
 from decimal import Decimal
-from app.Command import Command
+from app.command import Command
 from multiprocessing import Queue
 
 class MockCommand(Command):

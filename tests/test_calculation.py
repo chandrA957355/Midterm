@@ -1,6 +1,6 @@
 import pytest
 from decimal import Decimal
-from app.Calculation import Calculation
+from app.calculation import Calculation
 
 class MockAddCommand:
     operation_name = "add"

@@ -8,8 +8,8 @@ import logging
 import logging.config
 import pandas as pd
 from dotenv import load_dotenv
-from app.Calculations import Calculations
-from app.Calculation import Calculation
+from app.calculations import Calculations
+from app.calculation import Calculation
 from logger_config import configure_logging
 
 # Load environment variables

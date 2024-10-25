@@ -1,3 +1,4 @@
+# app/operations.py
 """
 Arithmetic Operations Module
 
@@ -60,7 +61,6 @@ def divide(a, b):
     Raises:
         ValueError: If b is zero.
     """
-    if b != 0:
-        return a / b
-    else:
+    if b == 0:
         raise ValueError("Cannot divide by zero")
+    return a / b

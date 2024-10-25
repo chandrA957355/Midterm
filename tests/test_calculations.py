@@ -1,8 +1,8 @@
 # tests/test_calculations.py
 import pytest
 from decimal import Decimal
-from app.Calculation import Calculation
-from app.Calculations import Calculations
+from app.calculation import Calculation
+from app.calculations import Calculations
 from app.plugins.add_command import AddCommand
 from app.plugins.subtract_command import SubtractCommand
 from app.plugins.multiply_command import MultiplyCommand

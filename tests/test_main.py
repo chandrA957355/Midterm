@@ -2,8 +2,8 @@ import pytest
 import logging
 from decimal import Decimal
 from unittest import mock
-from app.Calculation import Calculation
-from app.Calculations import Calculations
+from app.calculation import Calculation
+from app.calculations import Calculations
 from main import (
     load_environment_variables,
     load_plugins,
