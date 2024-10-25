@@ -16,25 +16,50 @@ def load_environment_variables():
     load_dotenv()
     settings = {key: value for key, value in os.environ.items()}
     logging.info("Environment variables loaded.")
-    
-    # Check for necessary environment variables
-    required_vars = ['ENVIRONMENT']
-    for var in required_vars:
-        if var not in settings:
-            logging.warning(f"Environment variable {var} is not set.")
     return settings
 
-# Configure logging
-def configure_logging():
-    os.makedirs("logs", exist_ok=True)
-    logging_conf_path = "logging.conf"
-    if os.path.exists(logging_conf_path):
-        logging.config.fileConfig(logging_conf_path, disable_existing_loggers=False)
-    else:
-        logging.basicConfig(
-            level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-        )
-    logging.info("Logging configured.")
+# Configure logging with dynamic settings
+def configure_logging(log_level=None):
+    os.makedirs("logs", exist_ok=True)  # Ensure the logs directory exists
+
+    # Load environment variables for logging configuration if not explicitly passed
+    log_level = log_level or os.getenv("LOG_LEVEL", "INFO").upper()  # Default to INFO if not set
+    log_file = os.getenv("LOG_FILE", "logs/application.log")  # Default log file location
+    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    # Configure logging settings
+    logging_config = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "standard": {
+                "format": log_format
+            }
+        },
+        "handlers": {
+            "console": {
+                "level": log_level,
+                "class": "logging.StreamHandler",
+                "formatter": "standard",
+                "stream": "ext://sys.stdout"
+            },
+            "file": {
+                "level": log_level,
+                "class": "logging.FileHandler",
+                "formatter": "standard",
+                "filename": log_file,
+                "mode": "a"
+            }
+        },
+        "root": {
+            "level": log_level,
+            "handlers": ["console", "file"]
+        }
+    }
+
+    # Apply logging configuration
+    logging.config.dictConfig(logging_config)
+
 
 # Load plugins dynamically
 def load_plugins():
@@ -71,56 +96,36 @@ def log_execution(func):
 
 @log_execution
 def perform_calculation_and_display(num1, num2, operation_type, commands, use_multiprocessing=False):
-    """
-    Performs the specified arithmetic operation on two numbers.
-    """
+    logging.debug(f"Starting calculation: {num1} {operation_type} {num2}")
     try:
         decimal_num1, decimal_num2 = map(Decimal, [num1, num2])
         operation_function = commands.get(operation_type)
         if not operation_function:
+            logging.warning(f"Unknown operation: {operation_type}")
             print(f"Unknown operation: {operation_type}")
             return
         
-        # Perform the calculation, either using multiprocessing or not
+        # Perform the calculation
         if use_multiprocessing:
-            result_queue = multiprocessing.Queue()
-            try:
-                process = multiprocessing.Process(
-                    target=operation_function.execute_multiprocessing,
-                    args=(decimal_num1, decimal_num2, result_queue)
-                )
-                process.start()
-                process.join()
-                result = result_queue.get()
-                print(f"The result of {num1} {operation_type} {num2} using multiprocessing is {result}")
-            except Exception as e:
-                logging.error(f"Multiprocessing failed: {e}")
-                print(f"Multiprocessing failed: {e}. Running operation without multiprocessing.")
-                result = operation_function.execute(decimal_num1, decimal_num2)
-                print(f"The result of {num1} {operation_type} {num2} is {result}")
+            logging.debug("Using multiprocessing for calculation.")
+            # Multiprocessing code here
         else:
-            # Use the execute method on the command object
             result = operation_function.execute(decimal_num1, decimal_num2)
-            print(f"The result of {num1} {operation_type} {num2} is {result}")
+            logging.info(f"Calculated {operation_type} result: {result}")
 
-        # Create a Calculation instance
+        # Save result in history
         calculation = Calculation(decimal_num1, decimal_num2, operation_function)
-        # Perform the calculation using the operate method
         calculation_result = calculation.operate()
-        print(f"Calculation result stored: {calculation_result}")
-
-        # Add the calculation to the history
         Calculations.add_calculation(calculation)
+        logging.debug("Calculation stored in history.")
 
     except InvalidOperation:
-        logging.error(f"Invalid number input: {num1} or {num2} is not a valid number.")
+        logging.error(f"Invalid input: {num1}, {num2}")
         print(f"Invalid number input: {num1} or {num2} is not a valid number.")
-    except ValueError as e:
-        logging.error(f"ValueError: {e}")
-        print(f"Error: {e}")
     except Exception as e:
-        logging.error(f"An unexpected error occurred: {e}")
+        logging.error(f"Unexpected error during calculation: {e}")
         print(f"An error occurred: {e}")
+
 
 # Run the REPL interface
 @log_execution
@@ -235,8 +240,9 @@ def main():
 
 # Entry point
 if __name__ == '__main__':
-    configure_logging()
     settings = load_environment_variables()
+    log_level = settings.get("LOG_LEVEL", "INFO").upper()
+    configure_logging(log_level=log_level)
     logging.info(f"Environment: {settings.get('ENVIRONMENT')}")
     logging.info("Application started.")
     main()
