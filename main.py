@@ -6,7 +6,10 @@ from decimal import Decimal, InvalidOperation
 from collections import OrderedDict
 import logging
 import logging.config
+import pandas as pd
 from dotenv import load_dotenv
+from app.Calculations import Calculations
+from app.Calculation import Calculation
 
 # Load environment variables
 def load_environment_variables():
@@ -55,7 +58,6 @@ def load_plugins():
 
     return commands
 
-
 # Decorator for logging execution
 def log_execution(func):
     def wrapper(*args, **kwargs):
@@ -67,11 +69,10 @@ def log_execution(func):
             raise
     return wrapper
 
-# Perform calculation and display the result
 @log_execution
 def perform_calculation_and_display(num1, num2, operation_type, commands, use_multiprocessing=False):
     """
-    Performs the specified arithmetic operation on two numbers, using multiprocessing if chosen.
+    Performs the specified arithmetic operation on two numbers.
     """
     try:
         decimal_num1, decimal_num2 = map(Decimal, [num1, num2])
@@ -80,6 +81,7 @@ def perform_calculation_and_display(num1, num2, operation_type, commands, use_mu
             print(f"Unknown operation: {operation_type}")
             return
         
+        # Perform the calculation, either using multiprocessing or not
         if use_multiprocessing:
             result_queue = multiprocessing.Queue()
             try:
@@ -97,8 +99,18 @@ def perform_calculation_and_display(num1, num2, operation_type, commands, use_mu
                 result = operation_function.execute(decimal_num1, decimal_num2)
                 print(f"The result of {num1} {operation_type} {num2} is {result}")
         else:
+            # Use the execute method on the command object
             result = operation_function.execute(decimal_num1, decimal_num2)
             print(f"The result of {num1} {operation_type} {num2} is {result}")
+
+        # Create a Calculation instance
+        calculation = Calculation(decimal_num1, decimal_num2, operation_function)
+        # Perform the calculation using the operate method
+        calculation_result = calculation.operate()
+        print(f"Calculation result stored: {calculation_result}")
+
+        # Add the calculation to the history
+        Calculations.add_calculation(calculation)
 
     except InvalidOperation:
         logging.error(f"Invalid number input: {num1} or {num2} is not a valid number.")
@@ -125,9 +137,55 @@ def run_repl(commands):
             print("Exiting REPL mode...")
             break
         elif user_input == 'menu':
-            commands['menu'].execute(commands)  
+            print("Available Commands:")
+            for cmd_name in commands:
+                print(f"- {cmd_name}")
+            continue
+        elif user_input == 'history':
+            history_df = Calculations.get_all_calculations()
+            if history_df.empty:
+                print("No calculations in history.")
+            else:
+                print(history_df)
+            continue
+        elif user_input == 'clear_history':
+            Calculations.clear_history()
+            print("History cleared.")
+            continue
+        elif user_input.startswith('save_history'):
+            _, filepath = user_input.split(maxsplit=1)
+            Calculations.save_history(filepath)
+            print(f"History saved to {filepath}.")
+            continue
+        elif user_input.startswith('load_history'):
+            _, filepath = user_input.split(maxsplit=1)
+            if os.path.exists(filepath):
+                Calculations.load_history(filepath)
+                print(f"History loaded from {filepath}.")
+            else:
+                print(f"File not found: {filepath}")
+            continue
+        elif user_input == 'latest':
+            # Display the latest calculation
+            latest_calculation = Calculations.get_latest()
+            if latest_calculation:
+                print(f"Latest calculation: {latest_calculation}")
+            else:
+                print("No calculations in history.")
+            continue
+        elif user_input.startswith('filter_with_operation'):
+            try:
+                _, operation_name = user_input.split(maxsplit=1)
+                filtered_df = Calculations.filter_with_operation(operation_name)
+                if filtered_df.empty:
+                    print(f"No calculations found for operation: {operation_name}")
+                else:
+                    print(filtered_df)
+            except ValueError:
+                print("Usage: filter_with_operation <operation_name>")
             continue
 
+        # Handling arithmetic commands
         parts = user_input.split()
         if len(parts) not in [3, 4]:  
             print("Usage: <command> <num1> <num2> [mp]")
@@ -140,27 +198,9 @@ def run_repl(commands):
             print(f"Unknown command: {command_name}")
             continue
 
-        try:
-            decimal_num1 = Decimal(num1)
-            decimal_num2 = Decimal(num2)
+        perform_calculation_and_display(num1, num2, command_name, commands, use_multiprocessing)
 
-            if use_multiprocessing:
-                result_queue = multiprocessing.Queue()
-                process = multiprocessing.Process(
-                    target=commands[command_name].execute_multiprocessing,
-                    args=(decimal_num1, decimal_num2, result_queue)
-                )
-                process.start()
-                process.join()
-                result = result_queue.get()
-                print(f"Result using multiprocessing: {result}")
-            else:
-                result = commands[command_name].execute(decimal_num1, decimal_num2)
-                print(f"Result: {result}")
 
-        except (ValueError, InvalidOperation) as e:
-            logging.error(f"Error: {e}")
-            print(f"Error: {e}")
 
 # Main function
 @log_execution
