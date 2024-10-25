@@ -1,6 +1,8 @@
 import pytest
+import multiprocessing
 from decimal import Decimal, DivisionByZero
 from app.plugins.add_command import AddCommand
+from app.plugins.square_command import SquareCommand
 from app.plugins.subtract_command import SubtractCommand
 from app.plugins.multiply_command import MultiplyCommand
 from app.plugins.divide_command import DivideCommand
@@ -80,3 +82,38 @@ def test_divide_command_execute_multiprocessing():
     result = result_queue.get()
     assert isinstance(result, DivisionByZero)
     assert str(result) == "Division by zero is not allowed."
+
+
+def test_execute():
+    """Test the execute method of SquareCommand."""
+    command = SquareCommand()
+    result = command.execute(Decimal(4), Decimal(0))  # Second parameter is ignored
+    assert result == Decimal(16)
+
+def test_execute_with_zero():
+    """Test the execute method with zero."""
+    command = SquareCommand()
+    result = command.execute(Decimal(0), Decimal(0))
+    assert result == Decimal(0)
+
+def test_execute_multiprocessing():
+    """Test the execute_multiprocessing method of SquareCommand."""
+    command = SquareCommand()
+    result_queue = multiprocessing.Queue()
+    
+    command.execute_multiprocessing(Decimal(5), Decimal(0), result_queue)
+    
+    # Retrieve the result from the queue
+    result = result_queue.get()
+    assert result == Decimal(25)
+
+def test_execute_multiprocessing_with_zero():
+    """Test the execute_multiprocessing method with zero."""
+    command = SquareCommand()
+    result_queue = multiprocessing.Queue()
+    
+    command.execute_multiprocessing(Decimal(0), Decimal(0), result_queue)
+    
+    # Retrieve the result from the queue
+    result = result_queue.get()
+    assert result == Decimal(0)
