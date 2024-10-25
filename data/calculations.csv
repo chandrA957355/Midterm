@@ -1,0 +1,5 @@
+operation,num1,num2,result
+add,2,3,5
+subtract,9,4,5
+multiply,6,9,54
+divide,57,6,9.5
