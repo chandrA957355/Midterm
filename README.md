@@ -28,7 +28,7 @@ This project involves the development of an advanced Python-based calculator app
    - **Strategy Pattern**: Allows different calculation strategies to be defined independently and dynamically switched during runtime.
 
 6. **Testing and Code Quality**:
-   - Achieves 98% test coverage with Pytest.
+   - Achieves 100% test coverage with Pytest.
    - Adheres to PEP 8 standards, with code quality verified by Pylint.
 
 ## Setup Instructions
